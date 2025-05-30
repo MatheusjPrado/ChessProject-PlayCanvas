@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "IgorSbitnev.error-gutters",
+        "actboy168.tasks",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint"
+    ]
+}

@@ -1,0 +1,107 @@
+{
+	"create new pc script": {
+		"prefix": "pcs",
+		"body": [
+			"import { ScriptTypeBase } from \"@/Types/ScriptTypeBase\";",
+			"import { attrib, createScript } from \"@/Configuration/createScriptDecorator\";",
+			"import { PlayCanvasEvents } from \"@/Integration/Events\";",
+			"",
+			"@createScript()",
+			"export class ${1:$TM_FILENAME_BASE} extends ScriptTypeBase {",
+			"    initialize() {}",
+			"",
+			"    update(dt: number) {}",
+			"}"
+		],
+		"description": "create new pc script"
+	},
+	"create new pc attribute": {
+		"prefix": "pca",
+		"body": [
+		  "@attrib({",
+		  "    title: \"${1:AttributeName}\",",
+		  "    type: \"${3|string,boolean,number,json,asset,entity,rgb,rgba,vec2,vec3,vec4,curve|}\",",
+		  "    description: \"${4:Description}\",",
+		  "    default: ${5:undefined}",
+		  "})",
+		  "${1:AttributeName}: ${2:any};"
+		],
+		"description": "create new pc attribute"
+	},
+	"add listener": {
+		"prefix": "pcl",
+		"body": [
+		  	"this.addListener(PlayCanvasEvents.${1:Event}, (${3:props}: ${4:any} ) => this.${2:functionName}(${3:props}));"
+		],
+		"description": "add listener"
+	},
+	"post message": {
+		"prefix": "pcp",
+		"body": [
+		  "this.postMessage(PlayCanvasEvents.${1:Event}, {${2:}});"
+		],
+		"description": "post message"
+	},
+	"singleton script": {
+		"prefix": "pcsingle",
+		"body": [
+			"import { ScriptTypeBase } from \"@/Types/ScriptTypeBase\";",
+			"import { attrib, createScript } from \"@/Configuration/createScriptDecorator\";",
+			"import { PlayCanvasEvents } from \"@/Integration/events\";",
+			"",
+			"@createScript()",
+			"export class ${1:$TM_FILENAME_BASE} extends ScriptTypeBase {",
+			"\t//#region singleton methods",
+			"\tprivate static _instance: ${1:$TM_FILENAME_BASE};",
+			"",
+			"\tpublic static get instance() {",
+			"\t\tif (!this._instance) {",
+			"\t\t\tconst w = window as any;",
+			"\t\t\tif (w.pc) {",
+			"\t\t\t\tconsole.warn(`No ${this.name} instance found. Creating a new one`);",
+			"",
+			"\t\t\t\tconst entity = new pc.Entity();",
+			"\t\t\t\tentity.name = this.name;",
+			"\t\t\t\tentity.addComponent(\"script\");",
+			"\t\t\t\tentity.script?.create(this.name);",
+			"",
+			"\t\t\t\tw.pc.app.root.addChild(entity);",
+			"\t\t\t} else {",
+			"\t\t\t\tconsole.error(`no pc instance found on window. unable to create a new ${this.name} instance `);",
+			"\t\t\t}",
+			"\t\t}",
+			"\t\treturn this._instance;",
+			"\t}",
+			"",
+			"\tpublic static set instance(script: ${1:$TM_FILENAME_BASE}) {",
+			"\t\tthis._instance = script;",
+			"\t}",
+			"",
+			"\tconstructor(args: any) {",
+			"\t\tsuper(args);",
+			"\t\tif (${1:$TM_FILENAME_BASE}._instance) {",
+			"\t\t\tthis.initialize = () => {",
+			"\t\t\t\tconst scriptName = ${1:$TM_FILENAME_BASE}.name;",
+			"\t\t\t\tthis.entity.script?.destroy(scriptName);",
+			"\t\t\t\tconsole.error(`singleton script ` +  ${scriptName} + ` already created. deleting new instance`);",
+			"\t\t\t};",
+			"\t\t} else {",
+			"\t\t\t${1:$TM_FILENAME_BASE}.instance = this;",
+			"\t\t}",
+			"",
+			"\t\tthis.on(\"destroy\", function (e) {",
+			"\t\t\t//@ts-ignore",
+			"\t\t\t${1:$TM_FILENAME_BASE}.instance = undefined;",
+			"\t\t});",
+			"\t}",
+			"\t//#endregion",
+			"",
+			"\tinitialize() {}",
+			"",
+			"\tupdate(dt: number) {}",
+			"}",
+			""
+		],
+		"description": "singleton script"
+	  }
+}

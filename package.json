@@ -1,0 +1,48 @@
+{
+	"name": "tms-playcanvas-boilerplate",
+	"version": "1.0.0",
+	"description": "",
+	"private": true,
+	"source": "src/index.ts",
+	"main": "dist/scripts/index.js",
+	"scripts": {
+		"dev": "env-cmd concurrently -n webpack,playcanvas-watch \"npm run dev:watch\" \"npm run dev:playcanvas-watch\" \"npm run sync:assets\"",
+		"dev:watch": "webpack --watch --mode=development",
+		"dev:playcanvas-watch": "node node_modules/playcanvas-sync/pcwatch.js --force",
+		"build": "webpack && env-cmd node node_modules/playcanvas-sync/pcsync.js pushAll -y",
+		"sync:assets": "env-cmd node node_modules/playcanvas-sync/pcsync.js pushAll -y -r \".(png|jpg|jpeg|glb|ttf|css|mp3|zip)\"",
+		"prettier:check": "cross-var prettier --check $npm_package_config_prettier_pattern",
+		"prettier:all": "cross-var prettier --write $npm_package_config_prettier_pattern",
+		"prettier:staged": "prettier --write",
+		"typecheck": "tsc --noEmit",
+		"lint": "eslint src//*.ts"
+	},
+	"config": {
+		"prettier_pattern": "/*.{js,jsx,ts,tsx,json,css,scss,md}"
+	},
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"@types/uuid": "^9.0.1",
+		"@typescript-eslint/eslint-plugin": "^5.19.0",
+		"@typescript-eslint/parser": "^5.19.0",
+		"concurrently": "^7.0.0",
+		"copy-webpack-plugin": "^11.0.0",
+		"cross-var": "^1.1.0",
+		"env-cmd": "^10.1.0",
+		"eslint": "^8.13.0",
+		"eslint-config-airbnb-base": "^15.0.0",
+		"eslint-config-prettier": "^8.5.0",
+		"eslint-plugin-unused-imports": "^2.0.0",
+		"playcanvas": "1.53.1",
+		"playcanvas-sync": "git+https://github.com/playcanvas/playcanvas-sync.git#2821cd1b87e25efd4040a2732c9f2ae4230a1f7b",
+		"prettier": "^2.5.1",
+		"terser-webpack-plugin": "^5.3.9",
+		"ts-loader": "^9.2.6",
+		"tsconfig-paths-webpack-plugin": "^4.1.0",
+		"typescript": "^4.5.5",
+		"uuid": "^9.0.0",
+		"webpack": "^5.69.1",
+		"webpack-cli": "^4.9.2"
+	}
+}
