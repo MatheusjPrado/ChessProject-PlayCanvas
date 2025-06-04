@@ -59,12 +59,13 @@ export class Board extends ScriptTypeBase {
         title: "Pawn Prefab",
         type: "asset"
     }) pawn!: Asset;
+    
 
     squares: Entity[][] = [];
     selectedPiece: Piece | null = null;
 
     initialize() {
-        const size = 2;
+        const size = 2.25;
         const cols = 8;
         const rows = 8;
 
@@ -123,6 +124,10 @@ export class Board extends ScriptTypeBase {
         const pieceScript = pieceEntity.getScript(Piece);
 
         pieceScript?.initializePiece(player, mat);
+
+        if (player === Players.White) {
+            pieceEntity.setEulerAngles(0, 180, 0);
+        }
 
         this.entity.addChild(pieceEntity);
         pieceEntity.setLocalPosition(col * size, 1.2, row * size);

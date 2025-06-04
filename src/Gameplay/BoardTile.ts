@@ -18,6 +18,7 @@ export class BoardTile extends ScriptTypeBase {
 	}) boardWhiteMaterial: Asset;
 
 	position: { row: number, collum: number }
+	
 	initialize() {
 	}
 
@@ -33,9 +34,12 @@ export class BoardTile extends ScriptTypeBase {
 		if (!material || !entity.render) return;
 
 		const meshInstance = entity.render.meshInstances[0];
-		if (meshInstance) {
+
+		if (meshInstance){
+
 			meshInstance.material = material;
 			meshInstance.material.update();
+
 		}
 	}
 }
