@@ -20,7 +20,7 @@ export class Player extends ScriptTypeBase {
 
     initialize() {
         this.app.mouse.on(pc.EVENT_MOUSEDOWN, this.onClick, this);
-        this.rigidBodySystem = this.app.systems.rigidbody!;
+        this.rigidBodySystem=this.app.systems.rigidbody!;
         if (!this.rigidBodySystem) {
             console.error("error");
         }
@@ -29,40 +29,50 @@ export class Player extends ScriptTypeBase {
     onClick(event: MouseEvent) {
         const camera = this.cameraEntity.camera;
         if (!camera) return;
-        const from = camera.screenToWorld(event.x, event.y, camera.nearClip, new pc.Vec3());
-        const to = camera.screenToWorld(event.x, event.y, camera.farClip, new pc.Vec3());
 
-        const result = this.rigidBodySystem.raycastFirst(from, to);
+        const from =camera.screenToWorld(event.x, event.y, camera.nearClip, new pc.Vec3());
+        const to= camera.screenToWorld(event.x, event.y, camera.farClip,  new pc.Vec3());
+        const result =this.rigidBodySystem.raycastFirst(from, to);
 
-        if (result) {
-            const clickedEntity = result.entity;
-            const pieceScript = clickedEntity.getScript(Piece);
-
-            if (pieceScript) {
-                pieceScript.select();
-                if (this.pieceSelected) this.unselectPiece();
-                this.pieceSelected = pieceScript
-                //colocar script de comer a peça
-            }
-            else {
-                if (this.pieceSelected) {
-                    //pegar a posiçao do tile
-                    const tileScript = clickedEntity.getScript(BoardTile);
-                    if (tileScript) {
-                        this.pieceSelected.move(tileScript.position)
-                    }
-                }
-                this.unselectPiece();
-
-            }
-
-        } else {
-            console.log("no entity was found by the raycast");
+        if (!result) {
             this.unselectPiece();
-
-
+            return;
         }
-        console.log(this.pieceSelected)
+
+        const clickedEntity= result.entity;
+        const pieceScript =clickedEntity.getScript(Piece);
+        const tileScript= clickedEntity.getScript(BoardTile);
+
+        if (pieceScript) {
+
+            if (!this.pieceSelected) {
+                pieceScript.select();
+                this.pieceSelected = pieceScript;
+                return;
+            }
+
+            if (pieceScript === this.pieceSelected) {
+                this.unselectPiece();
+                return;
+            }
+
+            if (pieceScript.player === this.pieceSelected.player) {
+                this.unselectPiece();
+                pieceScript.select();
+                this.pieceSelected = pieceScript;
+                return;
+            }
+
+            const pos = (pieceScript as any).boardPos;   
+            this.pieceSelected.move({ row: pos.row, collum: pos.collum });
+            this.unselectPiece();
+            return;
+        }
+
+        if (tileScript && this.pieceSelected) {
+            this.pieceSelected.move(tileScript.position);
+            this.unselectPiece();
+        }
     }
 
     unselectPiece() {

@@ -157,14 +157,26 @@ import { BoundingBox, Entity, Mesh, Vec3 } from "playcanvas";
 		return entity;
 	};
 
-	pc.Entity.prototype.getScript = function <T>(script: (new (...args: any[]) => T) | string): T | undefined {
-		const scriptName = script instanceof Function ? script.name : script;
-		const _script = this.script?.get(scriptName);
-		// if (!_script && IS_DEV) {
-		// 	console.error(`[${this.name}] Script ${scriptName} not found`);
-		// 	return;
-		// }
-		return _script as T;
+	pc.Entity.prototype.getScript = function <T>(
+			script: (new (...args: any[]) => T) | string
+		): T | undefined {
+			let scriptName: string = "";
+			let scriptType: any;
+			if (typeof script === "string") {
+				scriptName = script;
+				scriptType = application.scripts.get(scriptName);
+			} else if (typeof script === "function") {
+				scriptName = script.name;
+				scriptType = script as T;
+			}
+			let _script = this.script?.get(scriptName);
+			if (_script) {
+				return _script as T;
+			} else {
+				const foundScript = this.script?.scripts.filter((s:any) => s instanceof scriptType)[0];
+				return (foundScript as T) || undefined;
+			}
+	
 	};
 
 	pc.BoundingBox.prototype.calculate = function (entity: Entity) {

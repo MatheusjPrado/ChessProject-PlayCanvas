@@ -5,6 +5,10 @@ import { Asset, Entity, Material } from "playcanvas";
 
 @createScript()
 export class BoardTile extends ScriptTypeBase {
+
+	private defaultMat!: Material;   
+    private isWhite!: boolean;
+
 	@attrib({
 		title: "board Black Material",
 		type: "asset",
@@ -22,24 +26,29 @@ export class BoardTile extends ScriptTypeBase {
 	initialize() {
 	}
 
-	initializeTile(position: { row: number, collum: number }, size: number) {
-		this.position = { row: position.row, collum: position.collum };
-		const isWhite = (position.row + position.collum) % 2 === 0;
-		this.applyTileMaterial(this.entity, isWhite ? this.boardWhiteMaterial.resource : this.boardBlackMaterial.resource);
-		this.entity.setLocalPosition(position.collum * size, 0, position.row * size);
-	}
+    initializeTile(pos: {row:number; collum:number}, size:number) {
 
-	private applyTileMaterial(entity: Entity, material: Material) {
+        this.position= pos;
+        this.isWhite =(pos.row + pos.collum) % 2 === 0;
 
-		if (!material || !entity.render) return;
+        this.defaultMat= this.isWhite?this.boardWhiteMaterial.resource:this.boardBlackMaterial.resource;
 
-		const meshInstance = entity.render.meshInstances[0];
+        this.applyTileMaterial(this.entity, this.defaultMat);
+        this.entity.setLocalPosition(pos.collum * size, 0, pos.row * size);
 
-		if (meshInstance){
+    }
 
-			meshInstance.material = material;
-			meshInstance.material.update();
+	setHighlight(on: boolean, highlightMat?: Material) {
+        const targetMat = on && highlightMat ? highlightMat : this.defaultMat;
+        this.applyTileMaterial(this.entity, targetMat);
+    }
 
-		}
-	}
+    private applyTileMaterial(entity: Entity, mat: Material) {
+        if (!mat || !entity.render) return;
+        const mi = entity.render.meshInstances[0];
+        if (mi) {
+            mi.material = mat;
+            mi.material.update();
+        }
+    }
 }

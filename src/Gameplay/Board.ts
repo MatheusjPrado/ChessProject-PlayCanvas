@@ -9,6 +9,7 @@ import { BoardTile } from "./BoardTile";
 
 type PieceType = "king" | "queen" | "rook" | "bishop" | "knight" | "pawn";
 
+
 @createScript()
 export class Board extends ScriptTypeBase {
 
@@ -63,23 +64,29 @@ export class Board extends ScriptTypeBase {
 
     squares: Entity[][] = [];
     selectedPiece: Piece | null = null;
+    piecesMatrix: (Piece | null)[][] = [];
+    private highlightMat!: Material;
 
     initialize() {
         const size = 2.25;
         const cols = 8;
         const rows = 8;
 
+        this.highlightMat=this.app.assets.get(233765820)!.resource as Material;
+
         for (let i = 0; i < cols; i++) {
             this.squares[i] = [];
+            this.piecesMatrix[i] = [];     
+               
             for (let j = 0; j < rows; j++) {
                 const square = this.square.resource.instantiate() as Entity;
                 const squareScript = square.getScript(BoardTile);
                 this.entity.addChild(square);
-                squareScript?.initializeTile({ row: i, collum: j }, size)
+                squareScript?.initializeTile({ row: i, collum: j }, size);
                 this.squares[i][j] = square;
+                this.piecesMatrix[i][j] = null; 
             }
         }
-
 
         this.spawnPieces(size);
     }
@@ -115,22 +122,59 @@ export class Board extends ScriptTypeBase {
         row: number,
         size: number
     ) {
-
         const asset: Asset = (this as any)[type];
         const pieceEntity = asset.resource.instantiate() as Entity;
 
-        const mat: Material = player === Players.White ? this.pieceWhiteMaterial.resource : this.pieceBlackMaterial.resource;
+        let mat: Material;
 
+        if(player === Players.White) mat = this.pieceWhiteMaterial.resource;
+        else mat = this.pieceBlackMaterial.resource;
+        
         const pieceScript = pieceEntity.getScript(Piece);
-
         pieceScript?.initializePiece(player, mat);
 
-        if (player === Players.White) {
-            pieceEntity.setEulerAngles(0, 180, 0);
-        }
+        if (player === Players.White) pieceEntity.setEulerAngles(0, 180, 0);
+
+        this.piecesMatrix[row][col] = pieceScript!;
+        pieceScript?.setBoardContext(this, { row, collum: col });
 
         this.entity.addChild(pieceEntity);
         pieceEntity.setLocalPosition(col * size, 1.2, row * size);
+    }
+
+    updatePieceMatrix(piece: Piece, from: { row: number; collum: number }, to: { row: number; collum: number }) {
+
+        this.piecesMatrix[from.row][from.collum] = null;
+        this.piecesMatrix[to.row][to.collum]   = piece;
+
+        const printar = this.piecesMatrix.map(row =>
+            row.map(p => (p ? p.entity.name.slice(0, 2) : "--")) // I did with if else and it was a mess, so ugly :(
+        );
+        console.table(printar); 
+
+    }
+
+    highlightPossibleMoves(piece: Piece) {
+        
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const tile = this.squares[r][c].getScript(BoardTile);
+                if (!tile) continue;
+
+                if (piece.canMove({ row: r, collum: c })) {
+                    tile.setHighlight(true, this.highlightMat);
+                } else tile.setHighlight(false);
+            }
+        }
+
+    }
+
+    clearHighlights() {
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                this.squares[r][c].getScript(BoardTile)?.setHighlight(false);
+            }
+        }
     }
 
 
