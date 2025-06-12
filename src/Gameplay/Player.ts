@@ -18,7 +18,10 @@ export class Player extends ScriptTypeBase {
 
     pieceSelected?: any;
 
+    hoveredPiece?: Piece;
+
     initialize() {
+        this.app.mouse.on(pc.EVENT_MOUSEMOVE, this.onHover, this);
         this.app.mouse.on(pc.EVENT_MOUSEDOWN, this.onClick, this);
         this.rigidBodySystem=this.app.systems.rigidbody!;
         if (!this.rigidBodySystem) {
@@ -46,10 +49,15 @@ export class Player extends ScriptTypeBase {
         if (pieceScript) {
 
             if (!this.pieceSelected) {
+                
+                if (!pieceScript.getBoard().isPlayerTurn(pieceScript.player)) return;
+
+
                 pieceScript.select();
                 this.pieceSelected = pieceScript;
                 return;
             }
+
 
             if (pieceScript === this.pieceSelected) {
                 this.unselectPiece();
@@ -74,12 +82,55 @@ export class Player extends ScriptTypeBase {
             this.unselectPiece();
         }
     }
+    
+    onHover(event: MouseEvent) {
+        if (this.pieceSelected) return; 
+
+        const camera = this.cameraEntity.camera;
+        if (!camera) return;
+
+        const from=camera.screenToWorld(event.x, event.y, camera.nearClip, new pc.Vec3());
+        const to= camera.screenToWorld(event.x, event.y, camera.farClip, new pc.Vec3());
+        const result=this.rigidBodySystem.raycastFirst(from, to);
+
+        if (!result){
+            if (this.hoveredPiece) {
+                this.hoveredPiece.getBoard().clearHighlights();
+                this.hoveredPiece = undefined;
+            }
+            return;
+        }
+
+        const hoveredEntity=result.entity;
+        const piece=hoveredEntity.getScript(Piece);
+
+        if (!piece || !piece.getBoard().isPlayerTurn(piece.player)) {
+
+            if (this.hoveredPiece) {
+                this.hoveredPiece.getBoard().clearHighlights();
+                this.hoveredPiece = undefined;
+            }
+            return;
+        }
+        if(piece !== this.hoveredPiece) {
+            piece.getBoard().clearHighlights();
+            piece.getBoard().highlightPossibleMoves(piece);
+            this.hoveredPiece = piece;
+        }
+    }
 
     unselectPiece() {
         if (!this.pieceSelected) return;
+
         this.pieceSelected.unselect();
         this.pieceSelected = null;
+
+        if (this.hoveredPiece) {
+            this.hoveredPiece.getBoard().clearHighlights();
+            this.hoveredPiece = undefined;
+        }
     }
+
 
     update(dt: number) {
 
