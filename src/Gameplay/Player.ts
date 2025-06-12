@@ -46,10 +46,15 @@ export class Player extends ScriptTypeBase {
         if (pieceScript) {
 
             if (!this.pieceSelected) {
+                
+                if (!pieceScript.getBoard().isPlayerTurn(pieceScript.player)) return;
+
+
                 pieceScript.select();
                 this.pieceSelected = pieceScript;
                 return;
             }
+
 
             if (pieceScript === this.pieceSelected) {
                 this.unselectPiece();

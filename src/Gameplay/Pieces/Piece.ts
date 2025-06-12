@@ -56,7 +56,7 @@ export class Piece extends ScriptTypeBase {
         this.board?.highlightPossibleMoves(this);
     }
 
-     unselect() {
+    unselect() {
 
         console.log(this.entity.name + " was unselected");
         this.selected = false;
@@ -66,9 +66,9 @@ export class Piece extends ScriptTypeBase {
     }
 
     move(target: { row: number; collum: number }) {
-    
+
         if (!this.canMove(target)) {
-            console.log("this move is against the rules");
+            console.log("This move is against the rules");
             this.unselect();
             return;
         }
@@ -80,16 +80,24 @@ export class Piece extends ScriptTypeBase {
                 this.unselect();
                 return;
             }
-            targetPiece.capture(); 
+            targetPiece.capture();
         }
-       
-        this.entity.setLocalPosition(target.collum * 2.25, 1.2, target.row * 2.25);
+
+        this.entity.setLocalPosition(
+            target.collum * 2.25,
+            1.2,
+            target.row * 2.25
+        );
+
         this.board!.updatePieceMatrix(this, this.boardPos, target);
-        this.boardPos.row= target.row;
-        this.boardPos.collum =target.collum;
+        this.boardPos.row    = target.row;
+        this.boardPos.collum = target.collum;
+
+        this.board!.nextTurn();
 
         this.unselect();
     }
+
 
     capture() {
         console.log(this.entity.name + "was captured");
@@ -101,5 +109,9 @@ export class Piece extends ScriptTypeBase {
 
     isSelected(): boolean {
         return this.selected;
+    }
+
+    getBoard(): Board {
+        return this.board;
     }
 }

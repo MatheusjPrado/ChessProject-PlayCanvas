@@ -66,6 +66,8 @@ export class Board extends ScriptTypeBase {
     selectedPiece: Piece | null = null;
     piecesMatrix: (Piece | null)[][] = [];
     private highlightMat!: Material;
+    turn:Players=Players.White;
+
 
     initialize() {
         const size = 2.25;
@@ -176,6 +178,23 @@ export class Board extends ScriptTypeBase {
             }
         }
     }
+
+    isPlayerTurn(p:Players){
+
+        return p===this.turn;
+
+    }
+
+    nextTurn() {
+        if (this.turn === Players.White) {
+            this.turn = Players.Black;
+            console.log("black's turn");
+        } else {
+            this.turn = Players.White;
+            console.log("white's turn");
+        }
+    }
+
 
 
 
