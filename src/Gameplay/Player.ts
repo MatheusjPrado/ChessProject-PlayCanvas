@@ -27,14 +27,32 @@ export class Player extends ScriptTypeBase {
         if (!this.rigidBodySystem) {
             console.error("error");
         }
+
+        if (this.app.touch) {
+            this.app.touch.on("touchend", this.onTouchEnd, this);
+        }
     }
 
     onClick(event: MouseEvent) {
+        this.handleInput(event.x, event.y);
+    }
+
+    onTouchStart(event: any) {
+        event.event.preventDefault(); // prevents zooms
+    }
+
+    onTouchEnd(event: any) {
+        const touch = event.changedTouches[0];
+        if (!touch) return;
+        this.handleInput(touch.x, touch.y);
+    }
+
+    handleInput(x: number, y: number) {
         const camera = this.cameraEntity.camera;
         if (!camera) return;
 
-        const from =camera.screenToWorld(event.x, event.y, camera.nearClip, new pc.Vec3());
-        const to= camera.screenToWorld(event.x, event.y, camera.farClip,  new pc.Vec3());
+        const from =camera.screenToWorld(x, y, camera.nearClip, new pc.Vec3());
+        const to= camera.screenToWorld(x, y, camera.farClip,  new pc.Vec3());
         const result =this.rigidBodySystem.raycastFirst(from, to);
 
         if (!result) {

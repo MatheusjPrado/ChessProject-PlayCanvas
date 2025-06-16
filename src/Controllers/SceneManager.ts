@@ -87,6 +87,7 @@ export class SceneManager extends pc.ScriptType {
 		});
 
 		this.addListener(PlayCanvasEvents.SceneEvents.NextScene, () => this.nextScene());
+		this.addListener(PlayCanvasEvents.SceneEvents.UnloadScene, () => this.unloadScene());
 		this.sceneOrder = Object.keys(Scenes) as Scenes[];
 		if (!this.sceneRootEntity) {
 			const entity = new pc.Entity();
