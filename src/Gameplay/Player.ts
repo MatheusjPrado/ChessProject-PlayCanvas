@@ -1,9 +1,11 @@
 import { ScriptTypeBase } from "@/Types/ScriptTypeBase";
 import { attrib, createScript } from "@/Configuration/createScriptDecorator";
 import { PlayCanvasEvents } from "@/Integration/Events";
-import { Entity, RigidBodyComponentSystem, Vec3 } from "playcanvas";
+import { CameraComponent, Entity, RigidBodyComponentSystem, Vec3 } from "playcanvas";
 import { Piece } from "./Pieces/Piece";
 import { BoardTile } from "./BoardTile";
+import { Players } from "@/Integration/Constants";
+
 
 @createScript()
 export class Player extends ScriptTypeBase {
@@ -17,7 +19,6 @@ export class Player extends ScriptTypeBase {
     rigidBodySystem: RigidBodyComponentSystem;
 
     pieceSelected?: any;
-
     hoveredPiece?: Piece;
 
     initialize() {
@@ -48,7 +49,8 @@ export class Player extends ScriptTypeBase {
     }
 
     handleInput(x: number, y: number) {
-        const camera = this.cameraEntity.camera;
+        const camera = this.getRaycastCamera();
+
         if (!camera) return;
 
         const from =camera.screenToWorld(x, y, camera.nearClip, new pc.Vec3());
@@ -65,17 +67,12 @@ export class Player extends ScriptTypeBase {
         const tileScript= clickedEntity.getScript(BoardTile);
 
         if (pieceScript) {
-
             if (!this.pieceSelected) {
-                
                 if (!pieceScript.getBoard().isPlayerTurn(pieceScript.player)) return;
-
-
                 pieceScript.select();
                 this.pieceSelected = pieceScript;
                 return;
             }
-
 
             if (pieceScript === this.pieceSelected) {
                 this.unselectPiece();
@@ -89,7 +86,7 @@ export class Player extends ScriptTypeBase {
                 return;
             }
 
-            const pos = (pieceScript as any).boardPos;   
+            const pos = (pieceScript as any).boardPos;
             this.pieceSelected.move({ row: pos.row, collum: pos.collum });
             this.unselectPiece();
             return;
@@ -100,11 +97,12 @@ export class Player extends ScriptTypeBase {
             this.unselectPiece();
         }
     }
-    
-    onHover(event: MouseEvent) {
-        if (this.pieceSelected) return; 
 
-        const camera = this.cameraEntity.camera;
+    onHover(event: MouseEvent) {
+        if (this.pieceSelected) return;
+
+        const camera = this.getRaycastCamera();
+
         if (!camera) return;
 
         const from=camera.screenToWorld(event.x, event.y, camera.nearClip, new pc.Vec3());
@@ -123,7 +121,6 @@ export class Player extends ScriptTypeBase {
         const piece=hoveredEntity.getScript(Piece);
 
         if (!piece || !piece.getBoard().isPlayerTurn(piece.player)) {
-
             if (this.hoveredPiece) {
                 this.hoveredPiece.getBoard().clearHighlights();
                 this.hoveredPiece = undefined;
@@ -149,6 +146,13 @@ export class Player extends ScriptTypeBase {
         }
     }
 
+    getRaycastCamera(): CameraComponent | null {
+    
+        if (this.cameraEntity?.enabled && this.cameraEntity.camera?.enabled) {
+            return this.cameraEntity.camera;
+        }
+        return null;
+    }
 
     update(dt: number) {
 

@@ -114,4 +114,9 @@ export class Piece extends ScriptTypeBase {
     getBoard(): Board {
         return this.board;
     }
+
+    getBoardPos() {
+        return this.boardPos;
+    }
+
 }

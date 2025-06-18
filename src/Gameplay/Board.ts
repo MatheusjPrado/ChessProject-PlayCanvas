@@ -1,11 +1,13 @@
 import { ScriptTypeBase } from "@/Types/ScriptTypeBase";
 import { attrib, createScript } from "@/Configuration/createScriptDecorator";
-import { Asset, Entity, Material, Vec3 } from "playcanvas";
+import { Asset, CameraComponent, Entity, Material, ScriptComponent, Vec3 } from "playcanvas";
 import { Piece } from "./Pieces/Piece";
 import { Pawn } from "./Pieces/Pawn";
 import { Bishop } from "./Pieces/Bishop";
 import { Players } from "@/Integration/Constants";
 import { BoardTile } from "./BoardTile";
+import { Player } from "./Player";
+
 
 type PieceType = "king" | "queen" | "rook" | "bishop" | "knight" | "pawn";
 
@@ -60,12 +62,23 @@ export class Board extends ScriptTypeBase {
         title: "Pawn Prefab",
         type: "asset"
     }) pawn!: Asset;
+
+    @attrib({
+        title: "Camera White",
+        type: "entity"
+    }) cameraWhite: Entity;
+
+    @attrib({
+        title: "Camera Black",
+        type: "entity"
+    }) cameraBlack: Entity;
     
 
     squares: Entity[][] = [];
     selectedPiece: Piece | null = null;
     piecesMatrix: (Piece | null)[][] = [];
     private highlightMat!: Material;
+    private selectedTileMat!: Material;
     turn:Players=Players.White;
 
 
@@ -74,6 +87,7 @@ export class Board extends ScriptTypeBase {
         const cols = 8;
         const rows = 8;
 
+        this.selectedTileMat = this.app.assets.get(235058620)!.resource as Material;
         this.highlightMat=this.app.assets.get(233765820)!.resource as Material;
 
         for (let i = 0; i < cols; i++) {
@@ -91,6 +105,12 @@ export class Board extends ScriptTypeBase {
         }
 
         this.spawnPieces(size);
+
+        this.cameraWhite.enabled = true;
+        this.cameraBlack.enabled = false;
+        this.turn = Players.White;
+        this.setPlayerCamera(this.cameraWhite); 
+
     }
 
     // o record pega o tipo da peça, sua cor e numero
@@ -142,6 +162,7 @@ export class Board extends ScriptTypeBase {
 
         this.entity.addChild(pieceEntity);
         pieceEntity.setLocalPosition(col * size, 1.2, row * size);
+
     }
 
     updatePieceMatrix(piece: Piece, from: { row: number; collum: number }, to: { row: number; collum: number }) {
@@ -156,20 +177,25 @@ export class Board extends ScriptTypeBase {
 
     }
 
-    highlightPossibleMoves(piece: Piece) {
-        
+    highlightPossibleMoves(piece: Piece){
+
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 const tile = this.squares[r][c].getScript(BoardTile);
                 if (!tile) continue;
 
-                if (piece.canMove({ row: r, collum: c })) {
+                const pos = piece.getBoardPos();
+                if (r === pos.row && c === pos.collum) {
+                    tile.setHighlight(true, this.selectedTileMat);
+                } else if (piece.canMove({ row: r, collum: c })) {
                     tile.setHighlight(true, this.highlightMat);
-                } else tile.setHighlight(false);
+                } else {
+                    tile.setHighlight(false);
+                }
             }
         }
-
     }
+
 
     clearHighlights() {
         for (let r = 0; r < 8; r++) {
@@ -185,17 +211,31 @@ export class Board extends ScriptTypeBase {
 
     }
 
-    nextTurn() {
-        if (this.turn === Players.White) {
-            this.turn = Players.Black;
-            console.log("black's turn");
-        } else {
-            this.turn = Players.White;
-            console.log("white's turn");
-        }
+
+    private setPlayerCamera(camEnt: Entity) {
+
+        const playerEntity = this.app.root.findByName("Player") as Entity | null;
+
+        if (!playerEntity) console.log("aaaaaaaaa")
+
+        const sc = (playerEntity as any).script;
+        const playerScript = (sc?.player ?? sc?.Player) as Player | undefined;
+
+        if (playerScript) playerScript.cameraEntity = camEnt;
     }
 
 
+    nextTurn () {
+
+        this.turn = this.turn === Players.White ? Players.Black : Players.White;
+
+        const activeCam: Entity = this.turn === Players.White? this.cameraWhite:this.cameraBlack;
+
+        this.cameraWhite.enabled = activeCam === this.cameraWhite;
+        this.cameraBlack.enabled = activeCam === this.cameraBlack;
+
+        this.setPlayerCamera(activeCam);
+    }
 
 
     // onSquareClick(square: Entity) {

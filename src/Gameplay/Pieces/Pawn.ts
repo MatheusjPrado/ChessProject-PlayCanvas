@@ -9,8 +9,6 @@ import { Players } from "@/Integration/Constants";
 @createScript()
 export class Pawn extends Piece {
     canMove(target: { row: number; collum: number }): boolean {
-
-        if(!this.board || !this.boardPos) console.log("aaaaaaaaaaaaaaaaaaaaaaaaaaaa");
         
         const forwardDir = this.player === Players.White ? 1 : -1;
         const startRow = this.player === Players.White ? 1 : 6;
@@ -41,6 +39,33 @@ export class Pawn extends Piece {
         if (isCaptureDiagonal) return true;
 
         return false;
+    }
+
+    move(target: { row: number; collum: number }) { // promoting the pawn to some piece
+
+        super.move(target);
+        const lastRow = this.player === Players.White ? 7 : 0;
+
+        if (target.row === lastRow) {
+
+            console.log(this.entity.name + " reached the last row");
+            this.entity.destroy();
+
+            const queenAsset = this.board.queen;
+            const newQueenEntity = queenAsset.resource.instantiate() as Entity;
+            const queenScript = newQueenEntity.getScript(Piece)!;
+
+            const mat = this.player === Players.White? this.board.pieceWhiteMaterial.resource: this.board.pieceBlackMaterial.resource;
+
+            queenScript.initializePiece(this.player, mat);
+            queenScript.setBoardContext(this.board, { row: target.row, collum: target.collum });
+
+            if (this.player === Players.White) newQueenEntity.setEulerAngles(0, 180, 0);
+
+            this.board.entity.addChild(newQueenEntity);
+            newQueenEntity.setLocalPosition(target.collum * 2.25, 1.2, target.row * 2.25);
+            this.board.piecesMatrix[target.row][target.collum] = queenScript;
+        }
     }
 
 }
